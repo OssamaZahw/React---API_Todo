@@ -1,22 +1,60 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { axiosInstance } from "../config/axiosConfig";
 
 const Todolist = () => {
   const [todos, setTodos] = useState([]);
+  const [taskName, setTaskName] = useState('');
 
-  const handleChange = (e) => {};
+  const handleChange = (e) => {
+    setTaskName(e.target.value)
+  };
 
-  const handleDelete = (id) => {};
-  const handleEdit = (content) => {};
-  const handleDone = (status) => {};
+  const handleDelete = (id) => {
+    axiosInstance.delete('/todos/' + id).then(() => getData())
+  };
+  const handleEdit = (content) => { };
+  const handleDone = (status) => {
+    status.isCompleted = !status.isCompleted
+    axiosInstance.patch('/todos/' + status.id, status).then(() => getData())
+  };
+
+  const handleSearch = (e) => {
+    console.log(e.target.value)
+    axiosInstance.get('/todos?q=' + e.target.value).then((res) => {
+      setTodos(res.data);
+    }
+    )
+  }
 
   const addTask = async (e) => {
     e.preventDefault();
+    axiosInstance.post('/todos',
+      {
+        "taskName": taskName,
+        "isCompleted": false
+      }
+    ).then(() => getData())
+
   };
+
+
+
+  const getData = () => {
+    axiosInstance.get('/todos').then((res) => {
+      console.log(res.data)
+      setTodos(res.data)
+    })
+  }
+
+  useEffect(() => {
+    getData();
+  }, [])
+
 
   return (
     <div className="todolist">
-      <div className="search" onSubmit={addTask}>
-        <input type="text" placeholder="Search ex: todo 1" />
+      <div className="search">
+        <input type="text" onChange={handleSearch} placeholder="Search ex: todo 1" />
       </div>
       <form className="addTask" onSubmit={addTask}>
         <input
